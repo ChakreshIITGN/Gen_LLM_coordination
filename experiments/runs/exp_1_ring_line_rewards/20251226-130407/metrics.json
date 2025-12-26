@@ -1,0 +1,28 @@
+{
+  "steps_run": 31,
+  "total_reward": 22.0,
+  "coverage_unique_positions": 18,
+  "first_reward_step": 10,
+  "action_counts_by_energy_bin": {
+    "high": {
+      "LEFT": 13,
+      "RIGHT": 3,
+      "WAIT": 5
+    },
+    "mid": {
+      "LEFT": 7,
+      "RIGHT": 0,
+      "WAIT": 1
+    },
+    "low": {
+      "LEFT": 1,
+      "RIGHT": 1,
+      "WAIT": 0
+    }
+  },
+  "end_state": {
+    "x": 3,
+    "energy": 0,
+    "rewards_remaining": {}
+  }
+}
