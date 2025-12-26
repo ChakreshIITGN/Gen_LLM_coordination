@@ -1,0 +1,43 @@
+{
+  "steps_run": 10,
+  "total_reward": 0.0,
+  "coverage_unique_positions": 9,
+  "first_reward_step": null,
+  "action_counts_by_energy_bin": {
+    "high": {
+      "MOVE": 14,
+      "WAIT": 0
+    },
+    "mid": {
+      "MOVE": 4,
+      "WAIT": 0
+    },
+    "low": {
+      "MOVE": 2,
+      "WAIT": 0
+    }
+  },
+  "move_dir_counts_by_energy_bin": {
+    "high": {
+      "LEFT": 0,
+      "RIGHT": 7
+    },
+    "mid": {
+      "LEFT": 0,
+      "RIGHT": 2
+    },
+    "low": {
+      "LEFT": 0,
+      "RIGHT": 1
+    }
+  },
+  "end_state": {
+    "x": 5,
+    "energy": 0,
+    "rewards_remaining": {
+      "3": 5.0,
+      "9": 10.0,
+      "14": 7.0
+    }
+  }
+}

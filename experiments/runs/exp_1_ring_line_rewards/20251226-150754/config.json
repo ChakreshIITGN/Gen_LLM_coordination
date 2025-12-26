@@ -1,0 +1,17 @@
+{
+  "L": 20,
+  "T": 500,
+  "START_X": 0,
+  "START_ENERGY": 40,
+  "MOVE_COST": 1,
+  "REWARDS_INIT": {
+    "2": 5.0,
+    "9": 10.0,
+    "14": 7.0
+  },
+  "VIS_RADIUS": 3,
+  "OLLAMA_MODEL": "mistral",
+  "TEMPERATURE": 0.2,
+  "MAX_TOKENS": 120,
+  "seed": 0
+}
