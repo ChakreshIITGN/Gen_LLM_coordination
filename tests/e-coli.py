@@ -17,7 +17,7 @@ T = 500                 # max steps
 OLLAMA_BASE_URL = "http://localhost:11434/v1"
 OLLAMA_MODEL = "mistral"
 TEMPERATURE = 1 # study about temperature effects on coordination
-MAX_TOKENS = 512
+MAX_TOKENS = 150
 
 # ---- Output ----
 # RUN_DIR = Path("runs/exp_e-coli") / time.strftime("%Y%m%d-%H%M%S")
@@ -27,12 +27,13 @@ MAX_TOKENS = 512
 #%%
 # defining necessary classes and functions
 ActionType = Literal["L", "R", "W", "F"]
-
+continuousActionType = int
 X_0 = 20.0
 RATE = 1/0.5
+INITIAL = 10.0
 
 
-def exp_decay(initial: float, x: float, rate: float=RATE , x_0: float=X_0) -> float:
+def exp_decay(x: float, initial: float=INITIAL, rate: float=RATE, x_0: float=X_0) -> float:
     """Exponential decay function."""
     if x < x_0:
         return 0.0
@@ -56,12 +57,15 @@ class Action(BaseModel):
             raise ValueError("requires L, R, or W")
         
 class continuousAction(BaseModel):
-    x: int
+    type: int
 
     @model_validator(mode="after")
     def _validate_shape(self):
         # bounds will be checked within the context
-        return self
+        if type(self.type) is int:
+            return self
+        else:
+            raise ValueError("requires integer x")
 
 class LLMAgent():
     """
@@ -127,6 +131,7 @@ class LLMAgent():
             reward = -0.1
         self.x.append(new_x)
         self.reward.append(reward)
+        self.memory.append(new_x)
 
 
     def state_dict(self, memory_last_k: Optional[int] = None) -> dict:
@@ -153,23 +158,23 @@ def _serialize_messages_for_ollama(messages: list[dict]) -> list[dict]:
 
 #%% 
 # -- Continuous chat history (content can be dicts here) ---
-_messages = [
-    {
-        "role": "system",
-        "content": """Make a choice between : L, R, or W. Do not think, do not show the reasoning. Just output the single character choice.
-        Example: "L" or "R" or "W". No other text.
-        Always output a valid choice and do not assume anything""",
-    }
-]
-
 # _messages = [
 #     {
 #         "role": "system",
-#         "content": f"""Chose a number between [0,{L}]. 
-#         Do not think, do not show the reasoning. Just output a single number choice.
-#         Example: 23. No other text. Always output a valid integer within bounds.""",
+#         "content": """Make a choice between : L, R, or W. Do not think, do not show the reasoning. Just output the single character choice.
+#         Example: "L" or "R" or "W". No other text.
+#         Always output a valid choice and do not assume anything""",
 #     }
 # ]
+
+_messages = [
+    {
+        "role": "system",
+        "content": f"""Chose a number between [0,{L}]. 
+        Do not think, do not show the reasoning. Just output a single number choice.
+        Example: 23. No other text. Always output a valid integer within bounds.""",
+    }
+]
 
 def llm_call(user_payload, NUM_PREDICT) -> str:
 
@@ -183,6 +188,7 @@ def llm_call(user_payload, NUM_PREDICT) -> str:
         messages=_serialize_messages_for_ollama(_messages),
         options={
             "temperature": TEMPERATURE,
+            "max_tokens": MAX_TOKENS,
             #"num_predict": NUM_PREDICT,
             # "stop": ["\n", " ", ".", ",", "!", "?"],
         },
@@ -204,7 +210,7 @@ def llm_policy_continuous(agent: LLMAgent, *, L: int, provide_memory: bool, memo
             "agent": {
                 "name": agent.name,
                 "x": agent.x,
-                "reward": agent.reward,
+                "reward": agent.reward, ## !! <CHANGE> :  memory shall be instead a tuple of (reward,step)
                 "memory": [],
             },
             "instruction": f"Output one integer in [0,{L}]"
@@ -219,18 +225,20 @@ def llm_policy_continuous(agent: LLMAgent, *, L: int, provide_memory: bool, memo
     _messages[0]["content"] = system_hint
     
     raw = llm_call(user_payload=user_payload, NUM_PREDICT=2)
-
+    
+    print("Raw output from the LLM :: ", raw)
     # parse + validate bounds
     try:
         x_choice = int(raw)
         action = continuousAction(x=x_choice)
     except (ValueError, ValidationError):
         # safe fallback: "stay" by choosing current position clipped into bounds
-        x_fallback = min(max(int(agent.x), 0), L)
+        x_fallback = min(max(int(agent.x[-1]), 0), L)
+        print(x_fallback)
         action = continuousAction(x=x_fallback)
-
+    
+    
     agent.apply_action_with_reward(
-        agent,
         action,
         x_0=X_0,
         initial=10,
@@ -280,8 +288,8 @@ def llm_policy_step(agent: LLMAgent, *, provide_memory: bool, memory_k: int = 5)
     try:
         action = Action(type=raw)
     except ValidationError:
+        print(f"Invalid action from LLM: '{raw}'")
         
-
     # Update agent
     agent.apply(action, L=L)
 
@@ -308,7 +316,7 @@ def run(agent: LLMAgent, N: int, *, provide_memory: bool, policy_override: str =
 agent = LLMAgent(name="a1", x_0=1)
 
 print("\n--- Case 1: memory NOT given to LLM ---")
-run(agent, N=20, provide_memory=False)
+run(agent, N=10, provide_memory=True,policy_override="continuous")
 
 # print("\n--- Case 2: last 5 memory entries given to LLM ---")
 # run(agent, N=10, provide_memory=True)
