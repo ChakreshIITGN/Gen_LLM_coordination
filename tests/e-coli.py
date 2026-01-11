@@ -26,7 +26,7 @@ MAX_TOKENS = 512
 
 #%%
 # defining necessary classes and functions
-ActionType = Literal["L", "R", "W"]
+ActionType = Literal["L", "R", "W", "F"]
 
 X_0 = 20.0
 RATE = 1/0.5
@@ -156,9 +156,9 @@ def _serialize_messages_for_ollama(messages: list[dict]) -> list[dict]:
 _messages = [
     {
         "role": "system",
-        "content": """Make a choice between L, R, or W. 
-        Do not think, do not show the reasoning. Just output the single character choice.
-        Example: "L" or "R" or "W". No other text.""",
+        "content": """Make a choice between : L, R, or W. Do not think, do not show the reasoning. Just output the single character choice.
+        Example: "L" or "R" or "W". No other text.
+        Always output a valid choice and do not assume anything""",
     }
 ]
 
@@ -183,7 +183,7 @@ def llm_call(user_payload, NUM_PREDICT) -> str:
         messages=_serialize_messages_for_ollama(_messages),
         options={
             "temperature": TEMPERATURE,
-            "num_predict": NUM_PREDICT,
+            #"num_predict": NUM_PREDICT,
             # "stop": ["\n", " ", ".", ",", "!", "?"],
         },
     )
@@ -280,7 +280,7 @@ def llm_policy_step(agent: LLMAgent, *, provide_memory: bool, memory_k: int = 5)
     try:
         action = Action(type=raw)
     except ValidationError:
-        action = Action(type="W")
+        
 
     # Update agent
     agent.apply(action, L=L)
