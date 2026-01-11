@@ -1,22 +1,22 @@
-#%%
+# %%
 # loading necessary modules
-import json 
+import json
 import math
 from ollama import chat, ChatResponse
 from typing import Literal, Optional, Tuple
 
-from pydantic import BaseModel, ValidationError,model_validator 
+from pydantic import BaseModel, ValidationError, model_validator
 
-#%% 
+# %%
 # setting the configuration parameters
 # ---- World parameters ----
-L = 50                 # ring positions: 0..19
-T = 500                 # max steps
- 
+L = 50  # ring positions: 0..19
+T = 500  # max steps
+
 # ---- LLM (Ollama OpenAI-compatible) ----
 OLLAMA_BASE_URL = "http://localhost:11434/v1"
 OLLAMA_MODEL = "mistral"
-TEMPERATURE = 1 # study about temperature effects on coordination
+TEMPERATURE = 1  # study about temperature effects on coordination
 MAX_TOKENS = 150
 
 # ---- Output ----
@@ -24,26 +24,26 @@ MAX_TOKENS = 150
 # RUN_DIR.mkdir(parents=True, exist_ok=True)
 
 
-#%%
+# %%
 # defining necessary classes and functions
 ActionType = Literal["L", "R", "W", "F"]
 continuousActionType = int
 X_0 = 20.0
-RATE = 1/0.5
+RATE = 1 / 0.5
 INITIAL = 10.0
 
 
-def exp_decay(x: float, initial: float=INITIAL, rate: float=RATE, x_0: float=X_0) -> float:
+def exp_decay(x: float, initial: float = INITIAL, rate: float = RATE, x_0: float = X_0) -> float:
     """Exponential decay function."""
     if x < x_0:
         return 0.0
     else:
         return initial * math.exp(-rate * (x - x_0))
 
+
 def reward_value(x, min_val: float, max_val: float) -> float:
     """Reward value by capping function value between min_val and max_val."""
     return max(min(exp_decay(x), max_val), min_val)
-
 
 
 class Action(BaseModel):
@@ -52,10 +52,11 @@ class Action(BaseModel):
     @model_validator(mode="after")
     def _validate_shape(self):
         if self.type in ["L", "R", "W"]:
-            return self  
+            return self
         else:
             raise ValueError("requires L, R, or W")
-        
+
+
 class continuousAction(BaseModel):
     type: int
 
@@ -67,20 +68,21 @@ class continuousAction(BaseModel):
         else:
             raise ValueError("requires integer x")
 
-class LLMAgent():
+
+class LLMAgent:
     """
     Docstring for LLMAgent
     LLM Agent class representing an agent in the simulation.
     """
-    
-    def __init__(self, name:str, x_0: float, reward: list=[], memory:list = []):
+
+    def __init__(self, name: str, x_0: float, reward: list = [], memory: list = []):
         self.name = name
         self.x = [x_0]
         self.reward = reward
         self.memory = memory
 
-        return None     
-    
+        return None
+
     def apply(self, action: Action, L: int = 50) -> None:
         # boundary blocking: if move would go out of bounds, don't move
         if action.type == "L":
@@ -95,22 +97,22 @@ class LLMAgent():
         self.memory.append(action.type)
 
     def apply_action_with_reward(
-                self,
-                action: continuousAction,
-                *,
-                x_0: float,
-                initial: float,
-                rate: float,
-                min_reward: float,
-                max_reward: float,
-                L: int = 50,
-        )-> None:
+        self,
+        action: continuousAction,
+        *,
+        x_0: float,
+        initial: float,
+        rate: float,
+        min_reward: float,
+        max_reward: float,
+        L: int = 50,
+    ) -> None:
         old_x = self.x[-1]
 
-        if not (0 <= action.x <= L):
+        if not (0 <= action.type <= L):
             raise ValueError("out of bounds")
 
-        new_x = action.x
+        new_x = action.type
 
         # --- reward update ---
         if new_x == old_x:
@@ -132,7 +134,6 @@ class LLMAgent():
         self.x.append(new_x)
         self.reward.append(reward)
         self.memory.append(new_x)
-
 
     def state_dict(self, memory_last_k: Optional[int] = None) -> dict:
         mem = self.memory if memory_last_k is None else self.memory[-memory_last_k:]
@@ -156,7 +157,8 @@ def _serialize_messages_for_ollama(messages: list[dict]) -> list[dict]:
         out.append({"role": m["role"], "content": content})
     return out
 
-#%% 
+
+# %%
 # -- Continuous chat history (content can be dicts here) ---
 # _messages = [
 #     {
@@ -176,33 +178,36 @@ _messages = [
     }
 ]
 
-def llm_call(user_payload, NUM_PREDICT) -> str:
 
+def llm_call(user_payload, NUM_PREDICT) -> str:
     """Call Ollama chat endpoint with messages, return response content string."""
     global _messages
 
     _messages.append({"role": "user", "content": user_payload})
 
-    resp : ChatResponse = chat(
+    resp: ChatResponse = chat(
         model=OLLAMA_MODEL,
         messages=_serialize_messages_for_ollama(_messages),
         options={
             "temperature": TEMPERATURE,
             "max_tokens": MAX_TOKENS,
-            #"num_predict": NUM_PREDICT,
+            # "num_predict": NUM_PREDICT,
             # "stop": ["\n", " ", ".", ",", "!", "?"],
         },
     )
     return resp["message"]["content"].strip()
 
-def llm_policy_continuous(agent: LLMAgent, *, L: int, provide_memory: bool, memory_k: int = 5) -> Tuple[Action, str]:
+
+def llm_policy_continuous(
+    agent: LLMAgent, *, L: int, provide_memory: bool, memory_k: int = 5
+) -> Tuple[continuousAction, str, dict]:
     global _messages
 
     # what the LLM sees
     if provide_memory:
         user_payload = {
             "agent": agent.state_dict(memory_last_k=memory_k),
-            "instruction": f"Output one integer in [0,{L}]"
+            "instruction": f"Output one integer in [0,{L}]",
         }
     else:
         # memory not given
@@ -210,10 +215,10 @@ def llm_policy_continuous(agent: LLMAgent, *, L: int, provide_memory: bool, memo
             "agent": {
                 "name": agent.name,
                 "x": agent.x,
-                "reward": agent.reward, ## !! <CHANGE> :  memory shall be instead a tuple of (reward,step)
+                "reward": agent.reward,  ## !! <CHANGE> :  memory shall be instead a tuple of (reward,step)
                 "memory": [],
             },
-            "instruction": f"Output one integer in [0,{L}]"
+            "instruction": f"Output one integer in [0,{L}]",
         }
 
     system_hint = (
@@ -223,21 +228,20 @@ def llm_policy_continuous(agent: LLMAgent, *, L: int, provide_memory: bool, memo
 
     # (optional) refresh system instruction each step
     _messages[0]["content"] = system_hint
-    
+
     raw = llm_call(user_payload=user_payload, NUM_PREDICT=2)
-    
+
     print("Raw output from the LLM :: ", raw)
     # parse + validate bounds
     try:
         x_choice = int(raw)
-        action = continuousAction(x=x_choice)
+        action = continuousAction(type=x_choice)
     except (ValueError, ValidationError):
         # safe fallback: "stay" by choosing current position clipped into bounds
         x_fallback = min(max(int(agent.x[-1]), 0), L)
         print(x_fallback)
-        action = continuousAction(x=x_fallback)
-    
-    
+        action = continuousAction(type=x_fallback)
+
     agent.apply_action_with_reward(
         action,
         x_0=X_0,
@@ -269,7 +273,7 @@ def llm_policy_step(agent: LLMAgent, *, provide_memory: bool, memory_k: int = 5)
     if provide_memory:
         user_payload = {
             "agent": agent.state_dict(memory_last_k=memory_k),
-            "instruction": "Choose next action: L, R, or W."
+            "instruction": "Choose next action: L, R, or W.",
         }
     else:
         # memory not given: omit it (or set to None; here we omit)
@@ -279,7 +283,7 @@ def llm_policy_step(agent: LLMAgent, *, provide_memory: bool, memory_k: int = 5)
                 "x": agent.x,
                 "reward": agent.reward,
             },
-            "instruction": "Choose next action: L, R, or W."
+            "instruction": "Choose next action: L, R, or W.",
         }
 
     raw = llm_call(user_payload, NUM_PREDICT=1)
@@ -289,14 +293,14 @@ def llm_policy_step(agent: LLMAgent, *, provide_memory: bool, memory_k: int = 5)
         action = Action(type=raw)
     except ValidationError:
         print(f"Invalid action from LLM: '{raw}'")
-        
+
     # Update agent
     agent.apply(action, L=L)
 
     # Assistant always writes agent state as a dict (including full memory in the log)
     assistant_state = agent.state_dict(memory_last_k=None)
 
-    _messages.append({"role": "assistant", "content": assistant_state})
+    _messages.append({"role": "assistant", "content": json.dumps(assistant_state)})
     print(_messages)
     return action, raw, assistant_state
 
@@ -311,16 +315,17 @@ def run(agent: LLMAgent, N: int, *, provide_memory: bool, policy_override: str =
             action, raw, state = llm_policy_continuous(agent, L=10, provide_memory=provide_memory)
             print("raw:", raw, "-> action:", action.type, "| x:", agent.x)
 
-#%%
+
+# %%
 # ---- Example usage ----
 agent = LLMAgent(name="a1", x_0=1)
 
 print("\n--- Case 1: memory NOT given to LLM ---")
-run(agent, N=10, provide_memory=True,policy_override="continuous")
+run(agent, N=10, provide_memory=True, policy_override="continuous")
 
 # print("\n--- Case 2: last 5 memory entries given to LLM ---")
 # run(agent, N=10, provide_memory=True)
 
 
-#%%
+# %%
 # plotting the movement trajectory
