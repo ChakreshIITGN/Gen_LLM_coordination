@@ -1,11 +1,8 @@
 #%%
 # loading necessary modules
-import json
-import time 
+import json 
 import math
-import random
-import ollama
-from pathlib import Path
+from ollama import chat, ChatResponse
 from typing import Literal, Optional, Tuple
 
 from pydantic import BaseModel, ValidationError,model_validator 
@@ -15,8 +12,6 @@ from pydantic import BaseModel, ValidationError,model_validator
 # ---- World parameters ----
 L = 50                 # ring positions: 0..19
 T = 500                 # max steps
-START_X = 0
-
  
 # ---- LLM (Ollama OpenAI-compatible) ----
 OLLAMA_BASE_URL = "http://localhost:11434/v1"
@@ -161,9 +156,20 @@ def _serialize_messages_for_ollama(messages: list[dict]) -> list[dict]:
 _messages = [
     {
         "role": "system",
-        "content": "You reply with exactly one character: L, R, or W. No other text."
+        "content": """Make a choice between L, R, or W. 
+        Do not think, do not show the reasoning. Just output the single character choice.
+        Example: "L" or "R" or "W". No other text.""",
     }
 ]
+
+# _messages = [
+#     {
+#         "role": "system",
+#         "content": f"""Chose a number between [0,{L}]. 
+#         Do not think, do not show the reasoning. Just output a single number choice.
+#         Example: 23. No other text. Always output a valid integer within bounds.""",
+#     }
+# ]
 
 def llm_call(user_payload, NUM_PREDICT) -> str:
 
@@ -172,13 +178,13 @@ def llm_call(user_payload, NUM_PREDICT) -> str:
 
     _messages.append({"role": "user", "content": user_payload})
 
-    resp = ollama.chat(
+    resp : ChatResponse = chat(
         model=OLLAMA_MODEL,
         messages=_serialize_messages_for_ollama(_messages),
         options={
             "temperature": TEMPERATURE,
             "num_predict": NUM_PREDICT,
-            "stop": ["\n", " ", ".", ",", "!", "?"],
+            # "stop": ["\n", " ", ".", ",", "!", "?"],
         },
     )
     return resp["message"]["content"].strip()
@@ -187,11 +193,22 @@ def llm_policy_continuous(agent: LLMAgent, *, L: int, provide_memory: bool, memo
     global _messages
 
     # what the LLM sees
-    agent_state = agent.state_dict(memory_last_k=memory_k) if provide_memory else {
-        "name": agent.name,
-        "x": agent.x,
-        "reward": agent.reward,
-    }
+    if provide_memory:
+        user_payload = {
+            "agent": agent.state_dict(memory_last_k=memory_k),
+            "instruction": f"Output one integer in [0,{L}]"
+        }
+    else:
+        # memory not given
+        user_payload = {
+            "agent": {
+                "name": agent.name,
+                "x": agent.x,
+                "reward": agent.reward,
+                "memory": [],
+            },
+            "instruction": f"Output one integer in [0,{L}]"
+        }
 
     system_hint = (
         f"Choose the next target position as a single integer between 0 and {L} inclusive. "
@@ -200,11 +217,6 @@ def llm_policy_continuous(agent: LLMAgent, *, L: int, provide_memory: bool, memo
 
     # (optional) refresh system instruction each step
     _messages[0]["content"] = system_hint
-
-    user_payload = {
-            "agent": agent_state,
-            "instruction": f"Output one integer in [0,{L}]",
-        }
     
     raw = llm_call(user_payload=user_payload, NUM_PREDICT=2)
 
@@ -298,8 +310,8 @@ agent = LLMAgent(name="a1", x_0=1)
 print("\n--- Case 1: memory NOT given to LLM ---")
 run(agent, N=20, provide_memory=False)
 
-print("\n--- Case 2: last 5 memory entries given to LLM ---")
-run(agent, N=10, provide_memory=True)
+# print("\n--- Case 2: last 5 memory entries given to LLM ---")
+# run(agent, N=10, provide_memory=True)
 
 
 #%%
