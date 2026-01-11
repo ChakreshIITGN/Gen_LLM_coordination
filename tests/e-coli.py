@@ -28,8 +28,9 @@ MAX_TOKENS = 150
 # defining necessary classes and functions
 ActionType = Literal["L", "R", "W", "F"]
 continuousActionType = int
-X_0 = 20.0
-RATE = 1 / 0.5
+X_0 = 20
+agent_x0 = 5
+RATE = 1 / 10
 INITIAL = 10.0
 
 
@@ -41,7 +42,7 @@ def exp_decay(x: float, initial: float = INITIAL, rate: float = RATE, x_0: float
         return initial * math.exp(-rate * (x - x_0))
 
 
-def reward_value(x, min_val: float, max_val: float) -> float:
+def reward_value(x, min_val: float=-0.1, max_val: float=100) -> float:
     """Reward value by capping function value between min_val and max_val."""
     return max(min(exp_decay(x), max_val), min_val)
 
@@ -75,7 +76,7 @@ class LLMAgent:
     LLM Agent class representing an agent in the simulation.
     """
 
-    def __init__(self, name: str, x_0: float, reward: list = [], memory: list = []):
+    def __init__(self, name: str, x_0: float=agent_x0, reward: list = [], memory: list = []):
         self.name = name
         self.x = [x_0]
         self.reward = reward
@@ -93,7 +94,7 @@ class LLMAgent:
                 self.x.append(self.x[-1] + 1)
         # W: no move
 
-        self.reward = 0.0
+        self.reward.append(reward_value(self.x[-1]))
         self.memory.append(action.type)
 
     def apply_action_with_reward(
@@ -116,6 +117,9 @@ class LLMAgent:
 
         # --- reward update ---
         if new_x == old_x:
+            self.x.append(new_x)
+            self.reward.append(self.reward[-1])
+            self.memory.append(old_x)
             return  # no movement → no reward change
 
         if abs(new_x - x_0) < abs(old_x - x_0):
@@ -131,6 +135,7 @@ class LLMAgent:
         else:
             # moved away
             reward = -0.1
+
         self.x.append(new_x)
         self.reward.append(reward)
         self.memory.append(new_x)
@@ -160,23 +165,23 @@ def _serialize_messages_for_ollama(messages: list[dict]) -> list[dict]:
 
 # %%
 # -- Continuous chat history (content can be dicts here) ---
-# _messages = [
-#     {
-#         "role": "system",
-#         "content": """Make a choice between : L, R, or W. Do not think, do not show the reasoning. Just output the single character choice.
-#         Example: "L" or "R" or "W". No other text.
-#         Always output a valid choice and do not assume anything""",
-#     }
-# ]
-
 _messages = [
     {
         "role": "system",
-        "content": f"""Chose a number between [0,{L}]. 
-        Do not think, do not show the reasoning. Just output a single number choice.
-        Example: 23. No other text. Always output a valid integer within bounds.""",
+        "content": """Make a choice between : L, R, or W. Do not think, do not show the reasoning. Just output the single character choice.
+        Example: "L" or "R" or "W". No other text.
+        Always output a valid choice and do not assume anything""",
     }
 ]
+
+# _messages = [
+#     {
+#         "role": "system",
+#         "content": f"""Chose a number between [0,{L}]. 
+#         Do not think, do not show the reasoning. Just output a single number choice.
+#         Example: 23. No other text. Always output a valid integer within bounds.""",
+#     }
+# ]
 
 
 def llm_call(user_payload, NUM_PREDICT) -> str:
@@ -291,37 +296,42 @@ def llm_policy_step(agent: LLMAgent, *, provide_memory: bool, memory_k: int = 5)
     # Validate with Action model; fallback is W (safe, deterministic)
     try:
         action = Action(type=raw)
+        # Update agent
+        agent.apply(action, L=L)
+
+        # Assistant always writes agent state as a dict (including full memory in the log)
+        assistant_state = agent.state_dict(memory_last_k=None)
+
+        _messages.append({"role": "assistant", "content": json.dumps(assistant_state)})
+        print(_messages)
+        return action, raw, assistant_state
+    
     except ValidationError:
-        print(f"Invalid action from LLM: '{raw}'")
-
-    # Update agent
-    agent.apply(action, L=L)
-
-    # Assistant always writes agent state as a dict (including full memory in the log)
-    assistant_state = agent.state_dict(memory_last_k=None)
-
-    _messages.append({"role": "assistant", "content": json.dumps(assistant_state)})
-    print(_messages)
-    return action, raw, assistant_state
+        print("Validation error for action:", raw)
+        pass
 
 
 def run(agent: LLMAgent, N: int, *, provide_memory: bool, policy_override: str = "step") -> None:
     if policy_override == "step":
         for _ in range(N):
+            print("memory :>>>>>>>", agent.memory, "reward >>>>>", agent.reward)
             action, raw, state = llm_policy_step(agent, provide_memory=provide_memory, memory_k=5)
-            print("raw:", raw, "-> action:", action.type, "| x:", agent.x)
+            
+            
     else:
         for _ in range(N):
+
+            print("memory :>>>>>>>", agent.memory, "reward >>>>>", agent.reward)
             action, raw, state = llm_policy_continuous(agent, L=10, provide_memory=provide_memory)
-            print("raw:", raw, "-> action:", action.type, "| x:", agent.x)
+            # print("raw:", raw, "-> action:", action.type, "| x:", agent.x)
 
 
 # %%
 # ---- Example usage ----
-agent = LLMAgent(name="a1", x_0=1)
+agent = LLMAgent(name="a1", x_0=20)
 
 print("\n--- Case 1: memory NOT given to LLM ---")
-run(agent, N=10, provide_memory=True, policy_override="continuous")
+run(agent, N=25, provide_memory=True, policy_override="step")
 
 # print("\n--- Case 2: last 5 memory entries given to LLM ---")
 # run(agent, N=10, provide_memory=True)
