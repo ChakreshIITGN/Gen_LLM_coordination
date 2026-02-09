@@ -17,7 +17,8 @@ T = 500  # max steps
 OLLAMA_BASE_URL = "http://localhost:11434/v1"
 OLLAMA_MODEL = "mistral"
 TEMPERATURE = 1  # study about temperature effects on coordination
-MAX_TOKENS = 150
+MAX_TOKENS = 250
+episode_length = 25  # max steps per episode (for reset)
 
 # ---- Output ----
 # RUN_DIR = Path("runs/exp_e-coli") / time.strftime("%Y%m%d-%H%M%S")
@@ -26,11 +27,11 @@ MAX_TOKENS = 150
 
 # %%
 # defining necessary classes and functions
-ActionType = Literal["L", "R", "W", "F"]
-X_0 = 20
-agent_x0 = 5
-RATE = 1 / 10
-INITIAL = 10.0
+ActionType = Literal["Left", "Right", "Wait"]  # Left, Right, Wait
+X_0        = 20 # this is the peak of the reward function
+agent_x0   = 30 # this is the initial position of the agent
+RATE       = 1 / 10
+INITIAL    = 10.0
 
 
 def exp_decay(x: float, initial: float = INITIAL, rate: float = RATE, x_0: float = X_0) -> float:
@@ -53,10 +54,10 @@ class Action(BaseModel):
 
     @model_validator(mode="after")
     def _validate_shape(self):
-        if self.type in ["L", "R", "W"]:
+        if self.type in ["Left", "Right", "Wait"]:
             return self
         else:
-            raise ValueError("requires L, R, or W")
+            raise ValueError("requires Left, Right, or Wait")
     
 
 
@@ -67,23 +68,23 @@ class LLMAgent:
     LLM Agent class representing an agent in the simulation.
     """
 
-    def __init__(self, name: str, x_0: float=agent_x0, reward: list = [0], memory: list = []):
+    def __init__(self, name: str, x_0: float=agent_x0):
         self.name = name
         self.x = [x_0]
-        self.reward = reward
-        self.memory = memory
-
+        self.reward = []
+        self.memory = []
         return None
 
     def apply(self, action: Action, L: int = 50) -> None:
         # boundary blocking: if move would go out of bounds, don't move
-        if action.type == "L":
+        if action.type == "Left":
             if self.x[-1] - 1 >= 0:
                 self.x.append(self.x[-1] - 1)
-        elif action.type == "R":
+        elif action.type == "Right":
             if self.x[-1] + 1 <= L:
                 self.x.append(self.x[-1] + 1)
-        # W: no move
+        elif action.type == "Wait":
+            self.x.append(self.x[-1])  # no movement
 
         self.reward.append(reward_value(self.x[-1]))
         self.memory.append(action.type)
@@ -120,9 +121,9 @@ _messages = [
         You are an agent.
         You must output ONLY valid JSON.
         Schema:
-        { "type": "L|R|W", "reason": "string" }
+        { "type": "Left|Right|Wait", "reason": "string" }
         Rules:
-            - type must be exactly one of: L, R, W
+            - type must be exactly one of: Left, Right, Wait
             - reason must be one short sentence
             - Do not add extra fields
             - Do not add explanations""",
@@ -146,7 +147,7 @@ def llm_call(user_payload, agent_payload) -> str:
         messages=_serialize_messages_for_ollama(_messages),
         options={
             "temperature": TEMPERATURE,
-            "max_tokens": MAX_TOKENS,
+            "num_predict": MAX_TOKENS,
         },
 
     )
@@ -176,8 +177,9 @@ def llm_policy_step(agent: LLMAgent, *, provide_memory: bool, memory_k: int = 5)
             "content": {
                 "last_k_positions": memory,
                 "last_k_rewards"  : agent.reward[-memory_k:],
+                "instruction": "Choose next action: Left, Right, or Wait."
             },
-            "instruction": "Choose next action: L, R, or W.",
+   
         }
         if len(agent.memory) < memory_k:
             for m in agent.memory:
@@ -194,7 +196,7 @@ def llm_policy_step(agent: LLMAgent, *, provide_memory: bool, memory_k: int = 5)
                 "current_position": agent.x[-1],
                 "current_reward"  : agent.reward[-1] if agent.reward else None,
             },
-            "instruction": "Choose next action: L, R, or W.",
+            "instruction": "Choose next action: Left, Right, or Wait.",
         }
         agent_payload = None  # no memory messages
 
@@ -202,7 +204,8 @@ def llm_policy_step(agent: LLMAgent, *, provide_memory: bool, memory_k: int = 5)
 
     # Validate with Action model; fallback is W (safe, deterministic)
     try:
-        action = Action(type=raw)
+        data = json.loads(raw)  # parse JSON string to dict
+        action = Action(**data)  # validate dict with Action model
         # Update agent
         agent.apply(action, L=L)
 
@@ -211,14 +214,17 @@ def llm_policy_step(agent: LLMAgent, *, provide_memory: bool, memory_k: int = 5)
 
         return action, raw, assistant_state
     
-    except ValidationError:
+    except (ValidationError, json.JSONDecodeError):
         print("Validation error for action:", raw)
-        pass
+        fallback_action = Action(type="Wait", reason="Invalid action format, defaulting to Wait for safety.")
+        agent.apply(fallback_action, L=L)
+        assistant_state = agent.state_dict(memory_last_k=None)
+        return fallback_action, raw, assistant_state
 
 
-def run(agent: LLMAgent, N: int, *, provide_memory: bool) -> None:
+def run(agent: LLMAgent, episode: int, *, provide_memory: bool) -> None:
     
-    for _ in range(N):
+    for _ in range(episode):
         print("memory :>>>>>>>", agent.memory, "reward >>>>>", agent.reward)
         action, raw, state = llm_policy_step(agent, provide_memory=provide_memory, memory_k=5)
         print(f"LLM choice: {raw}, validated action: {action.type}, reason: {action.reason}")
@@ -229,10 +235,10 @@ def run(agent: LLMAgent, N: int, *, provide_memory: bool) -> None:
     
 # %%
 # ---- Example usage ----
-agent = LLMAgent(name="a1", x_0=20)
+agent = LLMAgent(name="a1", x_0=agent_x0)
 
-print("\n--- Case 1: memory NOT given to LLM ---")
-run(agent, N=25, provide_memory=True)
+print("\n--- Case 1: memory given to LLM ---")
+run(agent, episode=episode_length, provide_memory=False)
 
 # print("\n--- Case 2: last 5 memory entries given to LLM ---")
 # run(agent, N=10, provide_memory=True)
@@ -243,9 +249,22 @@ run(agent, N=25, provide_memory=True)
 import matplotlib.pyplot as plt
 
 plt.figure(figsize=(10, 5))
-plt.plot(agent.x, agent.reward, marker='o')
+plt.plot(agent.x[1:],agent.reward,'--')
 plt.xlabel("Position")
 plt.ylabel("Reward")
 plt.title("Agent Movement and Reward Trajectory")
 plt.grid(True)
 plt.show()
+# %%
+import numpy as np
+xi = np.linspace(0, 50, 100)
+reward_values = [reward_value(x) for x in xi]
+plt.figure(figsize=(10, 5))
+plt.plot(xi, reward_values, label="Reward Function")
+plt.xlabel("Position")
+plt.ylabel("Reward")
+plt.title("Reward Function vs Position")
+plt.grid(True)
+plt.legend()
+plt.show()
+# %%
