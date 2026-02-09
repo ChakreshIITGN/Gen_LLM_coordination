@@ -1,0 +1,47 @@
+{
+  "summary": {
+    "model_provider": "huggingface",
+    "model_name": "HuggingFaceTB/SmolLM-360M-Instruct",
+    "num_episodes": 3,
+    "hit_rate": 0.3333333333333333,
+    "median_steps_to_hit": 3.0,
+    "mean_steps_to_hit": 3.0,
+    "mean_total_steps": 14.333333333333334,
+    "mean_runs": 4.666666666666667,
+    "mean_tumbles": 9.666666666666666,
+    "mean_final_distance": 7.0,
+    "excess_tumbles": 5.333333333333333
+  },
+  "episodes": [
+    {
+      "episode_id": 0,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 6,
+      "num_tumbles": 14,
+      "final_distance_to_source": 13,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 1,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 6,
+      "num_tumbles": 14,
+      "final_distance_to_source": 7,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 2,
+      "success": true,
+      "steps_to_hit": 3,
+      "total_steps": 3,
+      "num_runs": 2,
+      "num_tumbles": 1,
+      "final_distance_to_source": 1,
+      "trajectory_length": 3
+    }
+  ]
+}

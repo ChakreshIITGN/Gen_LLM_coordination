@@ -1,0 +1,16 @@
+{
+  "model_provider": "huggingface",
+  "model_name": "HuggingFaceTB/SmolLM-360M-Instruct",
+  "num_episodes": 3,
+  "episode_config": {
+    "max_steps": 20,
+    "noise_std": 0.1,
+    "observation_history": 5,
+    "slip_probability": 0.0,
+    "success_distance": 1,
+    "decay_length": 3.0,
+    "source_location": null
+  },
+  "output_dir": "results",
+  "seed": null
+}

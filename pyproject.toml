@@ -17,4 +17,6 @@ dependencies = [
     "scipy>=1.16.3",
     "seaborn>=0.13.2",
     "statsmodels>=0.14.6",
+    "transformers>=4.40.0",
+    "torch>=2.0.0",
 ]
