@@ -206,3 +206,8 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 runs/
+
+
+## docs and notes
+doc/
+notes.md 

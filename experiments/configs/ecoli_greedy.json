@@ -1,0 +1,27 @@
+{
+  "experiment_name": "ecoli_greedy_baseline",
+  "experiment_type": "ecoli",
+  "world": {
+    "length": 50,
+    "boundary": "blocking",
+    "reward": {
+      "type": "exponential_decay",
+      "peak_position": 20.0,
+      "initial_value": 10.0,
+      "decay_rate": 0.1
+    }
+  },
+  "agent": {
+    "num_agents": 1,
+    "start_position": 30
+  },
+  "policy": {
+    "type": "greedy"
+  },
+  "logging": {
+    "output_dir": "experiments/runs",
+    "experiment_tag": "ecoli_greedy"
+  },
+  "episode_length": 25,
+  "seed": 0
+}
