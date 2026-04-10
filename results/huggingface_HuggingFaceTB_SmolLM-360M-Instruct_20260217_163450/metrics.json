@@ -1,0 +1,1017 @@
+{
+  "summary": {
+    "model_provider": "huggingface",
+    "model_name": "HuggingFaceTB/SmolLM-360M-Instruct",
+    "num_episodes": 100,
+    "hit_rate": 0.46,
+    "median_steps_to_hit": 5.0,
+    "mean_steps_to_hit": 7.6521739130434785,
+    "mean_total_steps": 14.32,
+    "mean_runs": 4.56,
+    "mean_tumbles": 9.76,
+    "mean_final_distance": 5.38,
+    "excess_tumbles": 5.33
+  },
+  "episodes": [
+    {
+      "episode_id": 0,
+      "success": true,
+      "steps_to_hit": 1,
+      "total_steps": 1,
+      "num_runs": 1,
+      "num_tumbles": 0,
+      "final_distance_to_source": 0,
+      "trajectory_length": 1
+    },
+    {
+      "episode_id": 1,
+      "success": true,
+      "steps_to_hit": 18,
+      "total_steps": 18,
+      "num_runs": 5,
+      "num_tumbles": 13,
+      "final_distance_to_source": 1,
+      "trajectory_length": 18
+    },
+    {
+      "episode_id": 2,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 7,
+      "num_tumbles": 13,
+      "final_distance_to_source": 9,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 3,
+      "success": true,
+      "steps_to_hit": 20,
+      "total_steps": 20,
+      "num_runs": 4,
+      "num_tumbles": 16,
+      "final_distance_to_source": 1,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 4,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 2,
+      "num_tumbles": 18,
+      "final_distance_to_source": 8,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 5,
+      "success": true,
+      "steps_to_hit": 5,
+      "total_steps": 5,
+      "num_runs": 2,
+      "num_tumbles": 3,
+      "final_distance_to_source": 1,
+      "trajectory_length": 5
+    },
+    {
+      "episode_id": 6,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 8,
+      "num_tumbles": 12,
+      "final_distance_to_source": 18,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 7,
+      "success": true,
+      "steps_to_hit": 1,
+      "total_steps": 1,
+      "num_runs": 0,
+      "num_tumbles": 1,
+      "final_distance_to_source": 0,
+      "trajectory_length": 1
+    },
+    {
+      "episode_id": 8,
+      "success": true,
+      "steps_to_hit": 1,
+      "total_steps": 1,
+      "num_runs": 1,
+      "num_tumbles": 0,
+      "final_distance_to_source": 0,
+      "trajectory_length": 1
+    },
+    {
+      "episode_id": 9,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 5,
+      "num_tumbles": 15,
+      "final_distance_to_source": 17,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 10,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 6,
+      "num_tumbles": 14,
+      "final_distance_to_source": 4,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 11,
+      "success": true,
+      "steps_to_hit": 2,
+      "total_steps": 2,
+      "num_runs": 0,
+      "num_tumbles": 2,
+      "final_distance_to_source": 1,
+      "trajectory_length": 2
+    },
+    {
+      "episode_id": 12,
+      "success": true,
+      "steps_to_hit": 5,
+      "total_steps": 5,
+      "num_runs": 1,
+      "num_tumbles": 4,
+      "final_distance_to_source": 1,
+      "trajectory_length": 5
+    },
+    {
+      "episode_id": 13,
+      "success": true,
+      "steps_to_hit": 4,
+      "total_steps": 4,
+      "num_runs": 1,
+      "num_tumbles": 3,
+      "final_distance_to_source": 1,
+      "trajectory_length": 4
+    },
+    {
+      "episode_id": 14,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 8,
+      "num_tumbles": 12,
+      "final_distance_to_source": 9,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 15,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 4,
+      "num_tumbles": 16,
+      "final_distance_to_source": 7,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 16,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 5,
+      "num_tumbles": 15,
+      "final_distance_to_source": 9,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 17,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 4,
+      "num_tumbles": 16,
+      "final_distance_to_source": 11,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 18,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 8,
+      "num_tumbles": 12,
+      "final_distance_to_source": 4,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 19,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 10,
+      "num_tumbles": 10,
+      "final_distance_to_source": 10,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 20,
+      "success": true,
+      "steps_to_hit": 8,
+      "total_steps": 8,
+      "num_runs": 2,
+      "num_tumbles": 6,
+      "final_distance_to_source": 1,
+      "trajectory_length": 8
+    },
+    {
+      "episode_id": 21,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 7,
+      "num_tumbles": 13,
+      "final_distance_to_source": 9,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 22,
+      "success": true,
+      "steps_to_hit": 2,
+      "total_steps": 2,
+      "num_runs": 0,
+      "num_tumbles": 2,
+      "final_distance_to_source": 1,
+      "trajectory_length": 2
+    },
+    {
+      "episode_id": 23,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 7,
+      "num_tumbles": 13,
+      "final_distance_to_source": 11,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 24,
+      "success": true,
+      "steps_to_hit": 19,
+      "total_steps": 19,
+      "num_runs": 5,
+      "num_tumbles": 14,
+      "final_distance_to_source": 1,
+      "trajectory_length": 19
+    },
+    {
+      "episode_id": 25,
+      "success": true,
+      "steps_to_hit": 6,
+      "total_steps": 6,
+      "num_runs": 4,
+      "num_tumbles": 2,
+      "final_distance_to_source": 1,
+      "trajectory_length": 6
+    },
+    {
+      "episode_id": 26,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 13,
+      "num_tumbles": 7,
+      "final_distance_to_source": 10,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 27,
+      "success": true,
+      "steps_to_hit": 20,
+      "total_steps": 20,
+      "num_runs": 6,
+      "num_tumbles": 14,
+      "final_distance_to_source": 1,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 28,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 7,
+      "num_tumbles": 13,
+      "final_distance_to_source": 14,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 29,
+      "success": true,
+      "steps_to_hit": 9,
+      "total_steps": 9,
+      "num_runs": 3,
+      "num_tumbles": 6,
+      "final_distance_to_source": 0,
+      "trajectory_length": 9
+    },
+    {
+      "episode_id": 30,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 7,
+      "num_tumbles": 13,
+      "final_distance_to_source": 13,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 31,
+      "success": true,
+      "steps_to_hit": 15,
+      "total_steps": 15,
+      "num_runs": 2,
+      "num_tumbles": 13,
+      "final_distance_to_source": 1,
+      "trajectory_length": 15
+    },
+    {
+      "episode_id": 32,
+      "success": true,
+      "steps_to_hit": 11,
+      "total_steps": 11,
+      "num_runs": 6,
+      "num_tumbles": 5,
+      "final_distance_to_source": 1,
+      "trajectory_length": 11
+    },
+    {
+      "episode_id": 33,
+      "success": true,
+      "steps_to_hit": 2,
+      "total_steps": 2,
+      "num_runs": 0,
+      "num_tumbles": 2,
+      "final_distance_to_source": 1,
+      "trajectory_length": 2
+    },
+    {
+      "episode_id": 34,
+      "success": true,
+      "steps_to_hit": 6,
+      "total_steps": 6,
+      "num_runs": 1,
+      "num_tumbles": 5,
+      "final_distance_to_source": 1,
+      "trajectory_length": 6
+    },
+    {
+      "episode_id": 35,
+      "success": true,
+      "steps_to_hit": 17,
+      "total_steps": 17,
+      "num_runs": 6,
+      "num_tumbles": 11,
+      "final_distance_to_source": 1,
+      "trajectory_length": 17
+    },
+    {
+      "episode_id": 36,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 8,
+      "num_tumbles": 12,
+      "final_distance_to_source": 10,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 37,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 9,
+      "num_tumbles": 11,
+      "final_distance_to_source": 12,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 38,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 7,
+      "num_tumbles": 13,
+      "final_distance_to_source": 9,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 39,
+      "success": true,
+      "steps_to_hit": 1,
+      "total_steps": 1,
+      "num_runs": 0,
+      "num_tumbles": 1,
+      "final_distance_to_source": 1,
+      "trajectory_length": 1
+    },
+    {
+      "episode_id": 40,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 6,
+      "num_tumbles": 14,
+      "final_distance_to_source": 4,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 41,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 7,
+      "num_tumbles": 13,
+      "final_distance_to_source": 11,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 42,
+      "success": true,
+      "steps_to_hit": 13,
+      "total_steps": 13,
+      "num_runs": 4,
+      "num_tumbles": 9,
+      "final_distance_to_source": 1,
+      "trajectory_length": 13
+    },
+    {
+      "episode_id": 43,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 7,
+      "num_tumbles": 13,
+      "final_distance_to_source": 10,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 44,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 7,
+      "num_tumbles": 13,
+      "final_distance_to_source": 10,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 45,
+      "success": true,
+      "steps_to_hit": 12,
+      "total_steps": 12,
+      "num_runs": 3,
+      "num_tumbles": 9,
+      "final_distance_to_source": 1,
+      "trajectory_length": 12
+    },
+    {
+      "episode_id": 46,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 7,
+      "num_tumbles": 13,
+      "final_distance_to_source": 8,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 47,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 6,
+      "num_tumbles": 14,
+      "final_distance_to_source": 11,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 48,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 6,
+      "num_tumbles": 14,
+      "final_distance_to_source": 4,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 49,
+      "success": true,
+      "steps_to_hit": 2,
+      "total_steps": 2,
+      "num_runs": 1,
+      "num_tumbles": 1,
+      "final_distance_to_source": 1,
+      "trajectory_length": 2
+    },
+    {
+      "episode_id": 50,
+      "success": true,
+      "steps_to_hit": 1,
+      "total_steps": 1,
+      "num_runs": 1,
+      "num_tumbles": 0,
+      "final_distance_to_source": 0,
+      "trajectory_length": 1
+    },
+    {
+      "episode_id": 51,
+      "success": true,
+      "steps_to_hit": 1,
+      "total_steps": 1,
+      "num_runs": 0,
+      "num_tumbles": 1,
+      "final_distance_to_source": 1,
+      "trajectory_length": 1
+    },
+    {
+      "episode_id": 52,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 9,
+      "num_tumbles": 11,
+      "final_distance_to_source": 4,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 53,
+      "success": true,
+      "steps_to_hit": 2,
+      "total_steps": 2,
+      "num_runs": 0,
+      "num_tumbles": 2,
+      "final_distance_to_source": 1,
+      "trajectory_length": 2
+    },
+    {
+      "episode_id": 54,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 8,
+      "num_tumbles": 12,
+      "final_distance_to_source": 5,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 55,
+      "success": true,
+      "steps_to_hit": 17,
+      "total_steps": 17,
+      "num_runs": 4,
+      "num_tumbles": 13,
+      "final_distance_to_source": 0,
+      "trajectory_length": 17
+    },
+    {
+      "episode_id": 56,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 9,
+      "num_tumbles": 11,
+      "final_distance_to_source": 5,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 57,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 4,
+      "num_tumbles": 16,
+      "final_distance_to_source": 8,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 58,
+      "success": true,
+      "steps_to_hit": 1,
+      "total_steps": 1,
+      "num_runs": 0,
+      "num_tumbles": 1,
+      "final_distance_to_source": 1,
+      "trajectory_length": 1
+    },
+    {
+      "episode_id": 59,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 9,
+      "num_tumbles": 11,
+      "final_distance_to_source": 8,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 60,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 4,
+      "num_tumbles": 16,
+      "final_distance_to_source": 9,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 61,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 6,
+      "num_tumbles": 14,
+      "final_distance_to_source": 9,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 62,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 8,
+      "num_tumbles": 12,
+      "final_distance_to_source": 8,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 63,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 7,
+      "num_tumbles": 13,
+      "final_distance_to_source": 14,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 64,
+      "success": true,
+      "steps_to_hit": 19,
+      "total_steps": 19,
+      "num_runs": 7,
+      "num_tumbles": 12,
+      "final_distance_to_source": 1,
+      "trajectory_length": 19
+    },
+    {
+      "episode_id": 65,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 9,
+      "num_tumbles": 11,
+      "final_distance_to_source": 16,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 66,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 8,
+      "num_tumbles": 12,
+      "final_distance_to_source": 12,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 67,
+      "success": true,
+      "steps_to_hit": 1,
+      "total_steps": 1,
+      "num_runs": 0,
+      "num_tumbles": 1,
+      "final_distance_to_source": 0,
+      "trajectory_length": 1
+    },
+    {
+      "episode_id": 68,
+      "success": true,
+      "steps_to_hit": 4,
+      "total_steps": 4,
+      "num_runs": 2,
+      "num_tumbles": 2,
+      "final_distance_to_source": 1,
+      "trajectory_length": 4
+    },
+    {
+      "episode_id": 69,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 8,
+      "num_tumbles": 12,
+      "final_distance_to_source": 12,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 70,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 3,
+      "num_tumbles": 17,
+      "final_distance_to_source": 13,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 71,
+      "success": true,
+      "steps_to_hit": 1,
+      "total_steps": 1,
+      "num_runs": 1,
+      "num_tumbles": 0,
+      "final_distance_to_source": 0,
+      "trajectory_length": 1
+    },
+    {
+      "episode_id": 72,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 4,
+      "num_tumbles": 16,
+      "final_distance_to_source": 7,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 73,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 4,
+      "num_tumbles": 16,
+      "final_distance_to_source": 12,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 74,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 6,
+      "num_tumbles": 14,
+      "final_distance_to_source": 14,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 75,
+      "success": true,
+      "steps_to_hit": 1,
+      "total_steps": 1,
+      "num_runs": 0,
+      "num_tumbles": 1,
+      "final_distance_to_source": 1,
+      "trajectory_length": 1
+    },
+    {
+      "episode_id": 76,
+      "success": true,
+      "steps_to_hit": 1,
+      "total_steps": 1,
+      "num_runs": 0,
+      "num_tumbles": 1,
+      "final_distance_to_source": 1,
+      "trajectory_length": 1
+    },
+    {
+      "episode_id": 77,
+      "success": true,
+      "steps_to_hit": 2,
+      "total_steps": 2,
+      "num_runs": 1,
+      "num_tumbles": 1,
+      "final_distance_to_source": 1,
+      "trajectory_length": 2
+    },
+    {
+      "episode_id": 78,
+      "success": true,
+      "steps_to_hit": 1,
+      "total_steps": 1,
+      "num_runs": 0,
+      "num_tumbles": 1,
+      "final_distance_to_source": 0,
+      "trajectory_length": 1
+    },
+    {
+      "episode_id": 79,
+      "success": true,
+      "steps_to_hit": 4,
+      "total_steps": 4,
+      "num_runs": 2,
+      "num_tumbles": 2,
+      "final_distance_to_source": 1,
+      "trajectory_length": 4
+    },
+    {
+      "episode_id": 80,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 6,
+      "num_tumbles": 14,
+      "final_distance_to_source": 6,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 81,
+      "success": true,
+      "steps_to_hit": 12,
+      "total_steps": 12,
+      "num_runs": 4,
+      "num_tumbles": 8,
+      "final_distance_to_source": 1,
+      "trajectory_length": 12
+    },
+    {
+      "episode_id": 82,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 6,
+      "num_tumbles": 14,
+      "final_distance_to_source": 6,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 83,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 5,
+      "num_tumbles": 15,
+      "final_distance_to_source": 3,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 84,
+      "success": true,
+      "steps_to_hit": 19,
+      "total_steps": 19,
+      "num_runs": 7,
+      "num_tumbles": 12,
+      "final_distance_to_source": 1,
+      "trajectory_length": 19
+    },
+    {
+      "episode_id": 85,
+      "success": true,
+      "steps_to_hit": 15,
+      "total_steps": 15,
+      "num_runs": 5,
+      "num_tumbles": 10,
+      "final_distance_to_source": 1,
+      "trajectory_length": 15
+    },
+    {
+      "episode_id": 86,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 4,
+      "num_tumbles": 16,
+      "final_distance_to_source": 11,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 87,
+      "success": true,
+      "steps_to_hit": 5,
+      "total_steps": 5,
+      "num_runs": 2,
+      "num_tumbles": 3,
+      "final_distance_to_source": 1,
+      "trajectory_length": 5
+    },
+    {
+      "episode_id": 88,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 4,
+      "num_tumbles": 16,
+      "final_distance_to_source": 9,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 89,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 7,
+      "num_tumbles": 13,
+      "final_distance_to_source": 6,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 90,
+      "success": true,
+      "steps_to_hit": 5,
+      "total_steps": 5,
+      "num_runs": 1,
+      "num_tumbles": 4,
+      "final_distance_to_source": 1,
+      "trajectory_length": 5
+    },
+    {
+      "episode_id": 91,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 9,
+      "num_tumbles": 11,
+      "final_distance_to_source": 4,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 92,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 3,
+      "num_tumbles": 17,
+      "final_distance_to_source": 17,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 93,
+      "success": true,
+      "steps_to_hit": 20,
+      "total_steps": 20,
+      "num_runs": 7,
+      "num_tumbles": 13,
+      "final_distance_to_source": 1,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 94,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 5,
+      "num_tumbles": 15,
+      "final_distance_to_source": 6,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 95,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 6,
+      "num_tumbles": 14,
+      "final_distance_to_source": 5,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 96,
+      "success": true,
+      "steps_to_hit": 18,
+      "total_steps": 18,
+      "num_runs": 4,
+      "num_tumbles": 14,
+      "final_distance_to_source": 1,
+      "trajectory_length": 18
+    },
+    {
+      "episode_id": 97,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 3,
+      "num_tumbles": 17,
+      "final_distance_to_source": 12,
+      "trajectory_length": 20
+    },
+    {
+      "episode_id": 98,
+      "success": true,
+      "steps_to_hit": 2,
+      "total_steps": 2,
+      "num_runs": 0,
+      "num_tumbles": 2,
+      "final_distance_to_source": 1,
+      "trajectory_length": 2
+    },
+    {
+      "episode_id": 99,
+      "success": false,
+      "steps_to_hit": -1,
+      "total_steps": 20,
+      "num_runs": 8,
+      "num_tumbles": 12,
+      "final_distance_to_source": 8,
+      "trajectory_length": 20
+    }
+  ]
+}

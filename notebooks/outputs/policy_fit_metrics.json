@@ -1,0 +1,8 @@
+{
+  "logreg_accuracy": null,
+  "logreg_f1": null,
+  "logreg_auc": null,
+  "tree_accuracy": null,
+  "tree_f1": null,
+  "confusion_matrix_lr": null
+}
