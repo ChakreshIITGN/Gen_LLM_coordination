@@ -13,6 +13,9 @@ class BayesianAgent(Agent):
     """
     Ideal agent: knows C(x|source) functional form, infers source via Bayesian updates,
     moves toward posterior mean of source location.
+
+    If observations include a known additive bias ``b`` (``obs = C + b + noise``),
+    set ``observation_bias=b`` so likelihoods use ``obs - b`` (equivalent to ``N(C, σ²)``).
     """
 
     def __init__(
@@ -23,6 +26,7 @@ class BayesianAgent(Agent):
         decay_length: float = 10.0,
         peak_concentration: float = 100.0,
         noise_sigma: float = 1.0,
+        observation_bias: float = 0.0,
         grid_bins_1d: int = 100,
         grid_shape_2d: tuple[int, int] = (10, 10),
         width: float = 20.0,
@@ -33,6 +37,8 @@ class BayesianAgent(Agent):
         self.decay_length = decay_length
         self.peak_concentration = peak_concentration
         self.noise_sigma = max(float(noise_sigma), 1e-9)
+        # Known additive shift on observations: obs = C(x|s) + bias + noise (e.g. fold-change wrapper).
+        self.observation_bias = float(observation_bias)
         self.grid_bins_1d = grid_bins_1d
         self.grid_shape_2d = grid_shape_2d
         self.width = width
@@ -73,7 +79,8 @@ class BayesianAgent(Agent):
     def _update_1d(self, obs: float, x: float) -> None:
         assert self._grid_1d is not None
         means = np.array([self._conc_1d(x, s) for s in self._grid_1d])
-        likelihood = stats.norm.pdf(obs, loc=means, scale=self.noise_sigma)
+        centered = float(obs) - self.observation_bias
+        likelihood = stats.norm.pdf(centered, loc=means, scale=self.noise_sigma)
         self._posterior *= likelihood
         total = self._posterior.sum()
         if total > 0:
@@ -85,7 +92,8 @@ class BayesianAgent(Agent):
         assert self._grid_sx is not None and self._grid_sy is not None
         x, y = pos
         means = self._conc_2d(x, y, self._grid_sx, self._grid_sy)
-        likelihood = stats.norm.pdf(obs, loc=means, scale=self.noise_sigma)
+        centered = float(obs) - self.observation_bias
+        likelihood = stats.norm.pdf(centered, loc=means, scale=self.noise_sigma)
         self._posterior *= likelihood
         total = self._posterior.sum()
         if total > 0:

@@ -11,6 +11,7 @@ import seaborn as sns
 from tqdm import tqdm
 
 from taxisim.agents.base import Agent
+from taxisim.agents.bayesian_agent import BayesianAgent
 from taxisim.environments.base import Environment, StepResult
 from taxisim.environments.linear_1d import Linear1DEnvironment
 from taxisim.experiments.runner import ExperimentConfig, ExperimentRunner
@@ -142,6 +143,10 @@ def run_fold_change_experiment(
 
     for background_offset in background_levels:
         for agent_name, agent in agents.items():
+            # Bayesian likelihood assumes obs ~ N(C(x|s), σ²); wrapper adds known offset b.
+            # Center observations so updates match the same generative model at every b.
+            if isinstance(agent, BayesianAgent):
+                agent.observation_bias = float(background_offset)
             trajs: list[list[dict]] = []
             for ep in range(n_episodes):
                 pbar.set_postfix(
