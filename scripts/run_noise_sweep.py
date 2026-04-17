@@ -8,7 +8,7 @@ import click
 from taxisim.agents.base import AgentConfig
 from taxisim.agents.bayesian_agent import BayesianAgent
 from taxisim.agents.hillclimb_agent import HillClimbAgent
-from taxisim.agents.llm_agent import LLMAgent
+from taxisim.agents.llm_agent import LLMAgent, resolve_llm_device
 from taxisim.agents.random_agent import RandomAgent
 from taxisim.agents.temporal_diff_agent import TemporalDiffAgent
 from taxisim.environments.linear_1d import Linear1DEnvironment
@@ -29,6 +29,20 @@ def _model_tag(model_name: str) -> str:
 @click.option("--seed", type=int, default=42)
 @click.option("--output-dir", type=str, default="results")
 @click.option(
+    "--device",
+    type=str,
+    default=None,
+    help="HuggingFace model device: auto, cuda, cpu, cuda:0. "
+    "Default: cuda when PyTorch sees a GPU, else auto.",
+)
+@click.option(
+    "--llm-only",
+    is_flag=True,
+    default=False,
+    help="Run only the LLM agent (skip CPU baselines). Use this to see GPU load; "
+    "the default sweep spends most time on numpy baselines with the GPU idle.",
+)
+@click.option(
     "--noise-level",
     "noise_levels",
     type=float,
@@ -42,36 +56,59 @@ def main(
     noise: float,
     seed: int,
     output_dir: str,
+    device: str | None,
+    llm_only: bool,
     noise_levels: tuple[float, ...],
 ) -> None:
     _ = noise
+    llm_device = resolve_llm_device(device)
     model_tag = _model_tag(model)
     env = Linear1DEnvironment(seed=seed)
     cfg = AgentConfig
 
-    agents = {
-        "random": RandomAgent(cfg("random", history_length=5, seed=seed), env.action_space),
-        "hillclimb": HillClimbAgent(cfg("hillclimb", history_length=5, seed=seed), env.action_space),
-        "temporal_diff": TemporalDiffAgent(
-            cfg("temporal_diff", history_length=5, seed=seed),
-            env.action_space,
-        ),
-        "bayesian": BayesianAgent(
-            cfg("bayesian", history_length=5, seed=seed),
-            env.action_space,
-            env_length=int(env.length),
-            decay_length=env.decay_length,
-            noise_sigma=1.0,
-        ),
-        "llm": LLMAgent(
-            cfg("llm", history_length=5, seed=seed),
-            env.action_space,
-            model_name=model,
-            backend=backend,
-            temperature=0.0,
-            env_params={"length": int(env.length)},
-        ),
-    }
+    if not llm_only:
+        click.echo(
+            "Note: the full sweep runs CPU-only baselines before the LLM each noise level; "
+            "the GPU stays idle during those runs. Use --llm-only to run only the HuggingFace agent.",
+            err=True,
+        )
+    if llm_only:
+        agents = {
+            "llm": LLMAgent(
+                cfg("llm", history_length=5, seed=seed),
+                env.action_space,
+                model_name=model,
+                backend=backend,
+                device=llm_device,
+                temperature=0.0,
+                env_params={"length": int(env.length)},
+            ),
+        }
+    else:
+        agents = {
+            "random": RandomAgent(cfg("random", history_length=5, seed=seed), env.action_space),
+            "hillclimb": HillClimbAgent(cfg("hillclimb", history_length=5, seed=seed), env.action_space),
+            "temporal_diff": TemporalDiffAgent(
+                cfg("temporal_diff", history_length=5, seed=seed),
+                env.action_space,
+            ),
+            "bayesian": BayesianAgent(
+                cfg("bayesian", history_length=5, seed=seed),
+                env.action_space,
+                env_length=int(env.length),
+                decay_length=env.decay_length,
+                noise_sigma=1.0,
+            ),
+            "llm": LLMAgent(
+                cfg("llm", history_length=5, seed=seed),
+                env.action_space,
+                model_name=model,
+                backend=backend,
+                device=llm_device,
+                temperature=0.0,
+                env_params={"length": int(env.length)},
+            ),
+        }
 
     run_noise_sweep(
         agents,

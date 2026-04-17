@@ -15,6 +15,44 @@ logger = logging.getLogger(__name__)
 _dotenv_loaded = False
 
 
+def resolve_llm_device(explicit: str | None = None) -> str:
+    """
+    Device string for local HuggingFace inference.
+
+    If ``explicit`` is provided (e.g. from CLI), it is returned unchanged.
+    Otherwise prefer ``cuda``, then Apple ``mps``, else ``auto`` (Accelerate /
+    CPU when no accelerator is available).
+    """
+    if explicit is not None:
+        return explicit
+    if torch.cuda.is_available():
+        return "cuda"
+    mps_backend = getattr(torch.backends, "mps", None)
+    if mps_backend is not None and mps_backend.is_available():
+        return "mps"
+    return "auto"
+
+
+def _hf_device_map_for_load(device: str) -> dict[str, int] | str | None:
+    """
+    ``device_map`` for ``from_pretrained``. Return ``None`` to load on CPU then
+    ``.to(device)`` (used for cpu/mps and fallbacks).
+    """
+    if device == "auto":
+        return "auto"
+    if device == "cuda":
+        return {"": 0} if torch.cuda.is_available() else None
+    if device.startswith("cuda:"):
+        if not torch.cuda.is_available():
+            return None
+        try:
+            idx = int(device.split(":", 1)[1])
+        except ValueError:
+            idx = 0
+        return {"": idx}
+    return None
+
+
 def _load_dotenv_once() -> None:
     """Load ``.env`` into the process so ``HF_TOKEN``, API keys, etc. are visible to libraries."""
     global _dotenv_loaded
@@ -95,16 +133,33 @@ class LLMAgent(Agent):
                 tok = AutoTokenizer.from_pretrained(self.model_name)
                 if tok.pad_token is None:
                     tok.pad_token = tok.eos_token
+                dm = _hf_device_map_for_load(self.device)
                 model = AutoModelForCausalLM.from_pretrained(
                     self.model_name,
-                    device_map="auto" if self.device == "auto" else None,
+                    device_map=dm,
                     torch_dtype=torch.float16,
                 )
-                if self.device != "auto":
+                if dm is None:
                     model = model.to(self.device)
                 model.eval()
                 self._hf_tokenizer = tok
                 self._hf_model = model
+                actual_dev = next(model.parameters()).device
+                logger.info(
+                    "Loaded HuggingFace model %s on device %s",
+                    self.model_name,
+                    actual_dev,
+                )
+                want_accel = self.device in ("cuda", "mps") or (
+                    self.device.startswith("cuda:") and torch.cuda.is_available()
+                )
+                if want_accel and actual_dev.type == "cpu":
+                    warnings.warn(
+                        f"Requested device={self.device!r} but model weights are on CPU ({actual_dev!s}). "
+                        "Use a PyTorch build with CUDA (or MPS on Apple Silicon), or set --device cpu.",
+                        UserWarning,
+                        stacklevel=2,
+                    )
         elif self.backend == "openai":
             if self._openai_client is None:
                 from openai import OpenAI

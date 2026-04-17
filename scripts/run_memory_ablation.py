@@ -6,7 +6,7 @@ import re
 import click
 
 from taxisim.agents.hillclimb_agent import HillClimbAgent
-from taxisim.agents.llm_agent import LLMAgent
+from taxisim.agents.llm_agent import LLMAgent, resolve_llm_device
 from taxisim.agents.temporal_diff_agent import TemporalDiffAgent
 from taxisim.environments.linear_1d import Linear1DEnvironment
 from taxisim.experiments.memory_ablation import run_memory_ablation
@@ -26,6 +26,13 @@ def _model_tag(model_name: str) -> str:
 @click.option("--noise", type=float, default=0.0)
 @click.option("--seed", type=int, default=42)
 @click.option("--output-dir", type=str, default="results")
+@click.option(
+    "--device",
+    type=str,
+    default=None,
+    help="HuggingFace model device: auto, cuda, cpu, cuda:0. "
+    "Default: cuda when PyTorch sees a GPU, else auto.",
+)
 def main(
     model: str,
     backend: str,
@@ -34,7 +41,9 @@ def main(
     noise: float,
     seed: int,
     output_dir: str,
+    device: str | None,
 ) -> None:
+    llm_device = resolve_llm_device(device)
     model_tag = _model_tag(model)
     env = Linear1DEnvironment(noise_sigma=noise, seed=seed)
     env_kwargs = {"noise_sigma": noise, "seed": seed}
@@ -45,6 +54,7 @@ def main(
             "name": "llm",
             "model_name": model,
             "backend": backend,
+            "device": llm_device,
             "prompt_style": prompt_style,
             "temperature": 0.0,
             "env_params": {"length": int(env.length)},

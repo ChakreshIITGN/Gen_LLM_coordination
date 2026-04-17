@@ -214,7 +214,8 @@ def run_noise_sweep(
     within that noise cell.
     """
     if noise_levels is None:
-        noise_levels = [0.0, 2.0, 5.0, 10.0, 15.0, 20.0, 30.0]
+        # noise_levels = [0.0, 2.0, 5.0, 10.0, 15.0, 20.0, 30.0]
+        noise_levels = [0.0, 2.0, 5.0]
 
     env_kwargs = env_kwargs or {}
     rows: list[dict] = []
