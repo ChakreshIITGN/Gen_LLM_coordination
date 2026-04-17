@@ -1,3 +1,6 @@
+# For CUDA 12.8 GPU PyTorch wheels (+cu128), install with:
+#   pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cu128
+# Optional: add torchvision==0.23.0 torchaudio==2.8.0 to match the full CUDA 12.8 stack.
 numpy>=1.26
 scipy>=1.12
 pandas>=2.2
@@ -7,7 +10,7 @@ tqdm>=4.66
 pydantic>=2.6
 python-dotenv>=1.0
 transformers>=4.40
-torch>=2.2
+torch==2.8.0
 accelerate>=0.29
 huggingface-hub>=0.22
 openai>=1.20

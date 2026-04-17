@@ -173,6 +173,10 @@ class LLMAgent(Agent):
         else:
             raise ValueError(f"Unknown backend: {self.backend}")
 
+    def preload_model(self) -> None:
+        """Load HuggingFace weights (or API clients) now instead of on first ``act``."""
+        self._ensure_backend()
+
     def _generate_hf(self, system: str, user: str) -> str:
         assert self._hf_tokenizer is not None and self._hf_model is not None
         tok = self._hf_tokenizer

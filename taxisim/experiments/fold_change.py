@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -17,6 +17,8 @@ from taxisim.environments.linear_1d import Linear1DEnvironment
 from taxisim.experiments.runner import ExperimentConfig, ExperimentRunner
 from taxisim.metrics.adaptation import fold_change_score
 from taxisim.metrics.navigation import steps_to_goal
+
+FoldChangeStartMode = Literal["auto", "left", "right", "fixed"]
 
 
 class BackgroundInfoWrapper(Environment):
@@ -79,6 +81,40 @@ def _fixed_start_from_source(
     return float(np.clip(source_position - fixed_distance, 0.0, length))
 
 
+def resolve_fold_change_start_position(
+    mode: FoldChangeStartMode,
+    *,
+    source_position: float,
+    fixed_distance: float,
+    length: float,
+    fixed_position: float | None = None,
+) -> float:
+    """
+    Compute a single start position for the fold-change grid.
+
+    Background offset is never used here; it only affects observations via
+    ``BackgroundInfoWrapper``. Positioning is independent of background level.
+
+    * ``auto`` — legacy rule: prefer ``source - distance`` if in [0, length], else
+      ``source + distance``, else clip ``source - distance``.
+    * ``left`` — ``clip(source_position - fixed_distance, 0, length)``.
+    * ``right`` — ``clip(source_position + fixed_distance, 0, length)``.
+    * ``fixed`` — ``fixed_position`` (required); clipped to [0, length].
+    """
+    L = float(length)
+    if mode == "auto":
+        return _fixed_start_from_source(source_position, fixed_distance, L)
+    if mode == "left":
+        return float(np.clip(source_position - fixed_distance, 0.0, L))
+    if mode == "right":
+        return float(np.clip(source_position + fixed_distance, 0.0, L))
+    if mode == "fixed":
+        if fixed_position is None:
+            raise ValueError("fixed_position is required when mode is 'fixed'")
+        return float(np.clip(fixed_position, 0.0, L))
+    raise ValueError(f"unknown start mode: {mode!r}")
+
+
 def _normalized_filename_suffix(value: str) -> str:
     if not value:
         return ""
@@ -98,12 +134,18 @@ def run_fold_change_experiment(
     length: int = 100,
     max_steps: int = 200,
     fixed_start_distance: float = 25.0,
+    start_mode: FoldChangeStartMode = "auto",
+    fixed_start_position: float | None = None,
     verbose: bool = True,
 ) -> pd.DataFrame:
     """
     Tests whether agents are invariant to an additive observation bias.
 
-    All conditions use the same start (``fixed_start_distance`` from the source).
+    Start position is chosen once from ``start_mode``, ``source_position``,
+    ``fixed_start_distance``, and optionally ``fixed_start_position`` (see
+    ``resolve_fold_change_start_position``). It does not depend on background
+    level; offsets apply only to observations.
+
     Each value in ``background_levels`` is an offset added to every observed
     concentration (after sensor noise): observed = true_c + noise + offset.
 
@@ -118,8 +160,12 @@ def run_fold_change_experiment(
         name: {bg: [] for bg in background_levels} for name in agents
     }
 
-    start_pos = _fixed_start_from_source(
-        source_position, fixed_start_distance, float(length)
+    start_pos = resolve_fold_change_start_position(
+        start_mode,
+        source_position=source_position,
+        fixed_distance=fixed_start_distance,
+        length=float(length),
+        fixed_position=fixed_start_position,
     )
 
     n_agents = len(agents)
@@ -129,8 +175,9 @@ def run_fold_change_experiment(
         tqdm.write(
             "[fold_change] "
             f"{n_agents} agents × {n_offsets} offsets × {n_episodes} episodes "
-            f"({total_eps} runs); start_pos={start_pos:.2f}, source={source_position}, "
-            f"fixed_dist={fixed_start_distance}, noise_sigma={noise_sigma}, max_steps={max_steps}"
+            f"({total_eps} runs); start_mode={start_mode!r}, start_pos={start_pos:.2f}, "
+            f"source={source_position}, fixed_dist={fixed_start_distance}, "
+            f"noise_sigma={noise_sigma}, max_steps={max_steps}"
         )
         tqdm.write(f"[fold_change] offsets={background_levels}, agents={list(agents.keys())}")
 
