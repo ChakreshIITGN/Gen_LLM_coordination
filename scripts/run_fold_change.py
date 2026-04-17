@@ -74,6 +74,11 @@ def main(
         ),
     }
 
+    click.echo(
+        f"Model ready. Running fold-change experiment ({len(agents)} agents, "
+        f"{n_episodes} episodes per cell) → {output_dir}",
+        err=True,
+    )
     run_fold_change_experiment(
         agents,
         noise_sigma=noise,

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import math
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -9,6 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from tqdm import tqdm
 
 from taxisim.agents.base import Agent
 from taxisim.environments.base import Environment, StepResult
@@ -19,11 +19,11 @@ from taxisim.metrics.navigation import steps_to_goal
 
 
 class BackgroundInfoWrapper(Environment):
-    """Wraps an environment and adds ``background_level`` to each ``info`` dict."""
+    """Adds a constant ``background_offset`` to each observation (and logs it in ``info``)."""
 
-    def __init__(self, inner: Environment, background_level: float):
+    def __init__(self, inner: Environment, background_offset: float):
         self._inner = inner
-        self.background_level = float(background_level)
+        self.background_offset = float(background_offset)
         self.noise_sigma = inner.noise_sigma
         self.max_steps = inner.max_steps
         self.seed = inner.seed
@@ -37,48 +37,45 @@ class BackgroundInfoWrapper(Environment):
     def concentration(self, position: Any) -> float:
         return self._inner.concentration(position)
 
-    def reset(self) -> StepResult:
-        r = self._inner.reset()
-        self.step_count = self._inner.step_count
+    def _with_offset(self, r: StepResult) -> StepResult:
+        """observed = inner_observation + background_offset (inner obs is true_c + noise)."""
+        obs = float(r.observation + self.background_offset)
         info = dict(r.info)
-        info["background_level"] = self.background_level
+        info["background_offset"] = self.background_offset
+        info["background_level"] = self.background_offset  # alias for downstream metrics
+        info["noisy_concentration"] = obs
         return StepResult(
-            observation=r.observation,
+            observation=obs,
             true_concentration=r.true_concentration,
             reward=r.reward,
             done=r.done,
             info=info,
         )
+
+    def reset(self) -> StepResult:
+        r = self._inner.reset()
+        self.step_count = self._inner.step_count
+        return self._with_offset(r)
 
     def step(self, action: str) -> StepResult:
         r = self._inner.step(action)
         self.step_count = self._inner.step_count
-        info = dict(r.info)
-        info["background_level"] = self.background_level
-        return StepResult(
-            observation=r.observation,
-            true_concentration=r.true_concentration,
-            reward=r.reward,
-            done=r.done,
-            info=info,
-        )
+        return self._with_offset(r)
 
 
-def _start_position_for_background_1d(
-    bg: float,
-    source: float,
-    decay_length: float,
+def _fixed_start_from_source(
+    source_position: float,
+    fixed_distance: float,
     length: float,
 ) -> float:
-    """Pick a position in [0, length] with concentration ~= bg (two-branch exponential)."""
-    bg = float(np.clip(bg, 1e-6, 99.999))
-    d = -decay_length * math.log(bg / 100.0)
-    c1 = source - d
-    c2 = source + d
-    candidates = [c for c in (c1, c2) if 0.0 <= c <= length]
-    if not candidates:
-        return float(np.clip(source, 0.0, length))
-    return float(candidates[0])
+    """Start exactly ``fixed_distance`` from the source when domain bounds allow."""
+    left = source_position - fixed_distance
+    right = source_position + fixed_distance
+    if 0.0 <= left <= length:
+        return float(left)
+    if 0.0 <= right <= length:
+        return float(right)
+    return float(np.clip(source_position - fixed_distance, 0.0, length))
 
 
 def _normalized_filename_suffix(value: str) -> str:
@@ -99,10 +96,17 @@ def run_fold_change_experiment(
     decay_length: float = 10.0,
     length: int = 100,
     max_steps: int = 200,
+    fixed_start_distance: float = 25.0,
+    verbose: bool = True,
 ) -> pd.DataFrame:
     """
-    Tests whether agents are background-concentration-invariant.
-    Shifts start position so initial concentration matches background_level.
+    Tests whether agents are invariant to an additive observation bias.
+
+    All conditions use the same start (``fixed_start_distance`` from the source).
+    Each value in ``background_levels`` is an offset added to every observed
+    concentration (after sensor noise): observed = true_c + noise + offset.
+
+    When ``verbose`` is True, prints a short plan and uses a tqdm bar over episodes.
     """
     sns.set_theme(style="whitegrid")
     Path(results_dir).mkdir(parents=True, exist_ok=True)
@@ -113,11 +117,38 @@ def run_fold_change_experiment(
         name: {bg: [] for bg in background_levels} for name in agents
     }
 
-    for bg in background_levels:
-        start = _start_position_for_background_1d(bg, source_position, decay_length, float(length))
+    start_pos = _fixed_start_from_source(
+        source_position, fixed_start_distance, float(length)
+    )
+
+    n_agents = len(agents)
+    n_offsets = len(background_levels)
+    total_eps = n_offsets * n_agents * n_episodes
+    if verbose:
+        tqdm.write(
+            "[fold_change] "
+            f"{n_agents} agents × {n_offsets} offsets × {n_episodes} episodes "
+            f"({total_eps} runs); start_pos={start_pos:.2f}, source={source_position}, "
+            f"fixed_dist={fixed_start_distance}, noise_sigma={noise_sigma}, max_steps={max_steps}"
+        )
+        tqdm.write(f"[fold_change] offsets={background_levels}, agents={list(agents.keys())}")
+
+    pbar = tqdm(
+        total=total_eps,
+        desc="fold_change",
+        unit="ep",
+        disable=not verbose,
+    )
+
+    for background_offset in background_levels:
         for agent_name, agent in agents.items():
             trajs: list[list[dict]] = []
             for ep in range(n_episodes):
+                pbar.set_postfix(
+                    offset=background_offset,
+                    agent=agent_name[:16] + ("…" if len(agent_name) > 16 else ""),
+                    ep=ep,
+                )
                 inner = Linear1DEnvironment(
                     length=length,
                     source_position=source_position,
@@ -125,11 +156,11 @@ def run_fold_change_experiment(
                     noise_sigma=noise_sigma,
                     max_steps=max_steps,
                     seed=seed,
-                    start_position=start,
+                    start_position=start_pos,
                 )
-                env = BackgroundInfoWrapper(inner, bg)
+                env = BackgroundInfoWrapper(inner, background_offset)
                 exp = ExperimentConfig(
-                    experiment_name=f"fold_change_{agent_name}_bg{bg}{suffix}",
+                    experiment_name=f"fold_change_{agent_name}_bg{background_offset}{suffix}",
                     n_episodes=1,
                     max_steps=max_steps,
                     seed=seed,
@@ -139,7 +170,8 @@ def run_fold_change_experiment(
                 runner = ExperimentRunner(exp)
                 summary = runner.run_episode(env, agent, ep)
                 trajs.append(summary["trajectory"])
-            trajectories_by_agent_bg[agent_name][bg] = trajs
+                pbar.update(1)
+            trajectories_by_agent_bg[agent_name][background_offset] = trajs
             succ = float(
                 np.mean([steps_to_goal(t, goal_threshold=1.0) is not None for t in trajs])
             )
@@ -149,11 +181,21 @@ def run_fold_change_experiment(
             rows.append(
                 {
                     "agent_name": agent_name,
-                    "background_level": bg,
+                    "background_offset": background_offset,
                     "success_rate": succ,
                     "mean_steps": mean_st,
                 }
             )
+            if verbose:
+                tqdm.write(
+                    f"[fold_change] done offset={background_offset} agent={agent_name}: "
+                    f"success_rate={succ:.2%} mean_steps={mean_st:.2f}"
+                )
+
+    pbar.close()
+
+    if verbose:
+        tqdm.write("[fold_change] aggregating fold-change scores and saving figures…")
 
     out = pd.DataFrame(rows)
 
@@ -176,7 +218,7 @@ def run_fold_change_experiment(
     fc_df = pd.DataFrame(fc_rows)
     out = out.merge(fc_df, on="agent_name", how="left")
 
-    heat = out.pivot(index="agent_name", columns="background_level", values="success_rate")
+    heat = out.pivot(index="agent_name", columns="background_offset", values="success_rate")
     fig, ax = plt.subplots(figsize=(8, max(3, len(agents) * 0.4)))
     sns.heatmap(heat, annot=True, fmt=".2f", cmap="viridis", ax=ax)
     ax.set_title("Fold-change: success rate heatmap")
@@ -196,5 +238,11 @@ def run_fold_change_experiment(
     fig2.savefig(Path(results_dir) / f"fold_change_ratio{suffix}_{ts}.png", dpi=150)
     plt.close(fig2)
 
-    out.to_csv(Path(results_dir) / f"fold_change_summary{suffix}_{ts}.csv", index=False)
+    summary_csv = Path(results_dir) / f"fold_change_summary{suffix}_{ts}.csv"
+    out.to_csv(summary_csv, index=False)
+    if verbose:
+        tqdm.write(
+            f"[fold_change] wrote summary {summary_csv} "
+            f"(heatmap and ratio plots in {results_dir!s})"
+        )
     return out
